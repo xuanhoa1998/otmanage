@@ -4,6 +4,8 @@ from django.contrib.auth.models import User
 from employee.models import DBOTRequest
 from rest_framework import serializers
 from django.contrib.auth.models import User
+from django.contrib.auth import authenticate
+
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -43,3 +45,14 @@ class InvoiceSerializer(serializers.ModelSerializer):
     class Meta:
         model = DBOTRequest
         fields = ('employee', 'manager', 'title', 'description', 'date', 'start_time', 'end_time', 'approved')
+
+
+class LoginUserSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    password = serializers.CharField()
+
+    def validate(self, data):
+        user = authenticate(**data)
+        if user and user.is_active:
+            return user
+        raise serializers.ValidationError("Invalid Details.")

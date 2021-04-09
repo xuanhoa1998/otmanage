@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from django.contrib.auth.models import User
 from rest_framework.status import HTTP_200_OK, HTTP_404_NOT_FOUND
 
-from .serializers import ChangePasswordSerializer
+from .serializers import ChangePasswordSerializer, LoginUserSerializer
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import generics, permissions
 from rest_framework.parsers import JSONParser
@@ -38,48 +38,34 @@ class RegisterAPI(generics.GenericAPIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-# Login API
-class LoginAPI(KnoxLoginView):
-    permission_classes = (permissions.AllowAny,)
+class LoginAPI(generics.GenericAPIView):
+    serializer_class = LoginUserSerializer
 
-    def post(self, request, format=None):
+    def post(self, request, *args, **kwargs):
         response = {}
-        data = request.data
-        serializer = AuthTokenSerializer(data=data)
-        user = None
-        if serializer.is_valid():
-            user = serializer.validated_data['user']
+        try:
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            user = serializer.validated_data
+            token = AuthToken.objects.create(user)[1]
+            user_res = request.data
+
             response.update({
                 'status': 'success',
-                'message': 'Login',
-                'user': data['username'],
-            })
-        try:
-            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-
-            email_user = user.email
-            user_set_token = User.objects.filter(email=email_user)
-            token = Token.objects.get_or_create(user=user_set_token[0])
-            try:
-                token = token[0].key
-            except Exception as e:
-                token = ''
-            response.update({
-                'token': token,
                 'code': status.HTTP_200_OK,
+                'message': 'Login',
+                'user': user_res,
+                'token': token,
             })
-            return Response(response, HTTP_200_OK)
-
         except Exception as e:
-            response.update({
-                'code': status.HTTP_404_NOT_FOUND,
-            })
-            return Response(response, HTTP_404_NOT_FOUND)
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
+        return Response(response, status=status.HTTP_201_CREATED)
 
 
 # Get User API
 class UserAPI(generics.RetrieveAPIView):
-    permission_classes = [permissions.IsAuthenticated, ]
+    # permission_classes = [permissions.IsAuthenticated, ]
+
     serializer_class = UserSerializer
 
     def get_object(self):
