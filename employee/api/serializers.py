@@ -1,14 +1,16 @@
 from rest_framework import generics, permissions
 from rest_framework import serializers
 from django.contrib.auth.models import User
+from employee.models import DBOTRequest
+from rest_framework import serializers
+from django.contrib.auth.models import User
 
-# User Serializer
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'username', 'email')
 
-# Register Serializer
+
 class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -20,15 +22,12 @@ class RegisterSerializer(serializers.ModelSerializer):
 
         return user
 
-# User Serializer
-class UserSerializer(serializers.ModelSerializer):
-  class Meta:
-    model = User
-    fields = ('id', 'username', 'email')
 
-# Change Password
-from rest_framework import serializers
-from django.contrib.auth.models import User
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'email')
+
 
 class ChangePasswordSerializer(serializers.Serializer):
     model = User
@@ -38,3 +37,9 @@ class ChangePasswordSerializer(serializers.Serializer):
     """
     old_password = serializers.CharField(required=True)
     new_password = serializers.CharField(required=True)
+
+
+class InvoiceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DBOTRequest
+        fields = ('employee', 'manager', 'title', 'description', 'date', 'start_time', 'end_time', 'approved')
