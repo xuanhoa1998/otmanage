@@ -1,11 +1,13 @@
 from django.contrib.auth import login
 from django.http import Http404, HttpResponse, JsonResponse
 from rest_framework.authtoken.serializers import AuthTokenSerializer
+from rest_framework.permissions import AllowAny, IsAdminUser
 from knox.views import LoginView as KnoxLoginView, LoginView
 from rest_framework import status
 from rest_framework import generics
 from rest_framework.response import Response
 from django.contrib.auth.models import User
+
 from rest_framework.status import HTTP_200_OK, HTTP_404_NOT_FOUND
 
 from .serializers import ChangePasswordSerializer, LoginUserSerializer
@@ -49,7 +51,6 @@ class LoginAPI(generics.GenericAPIView):
             user = serializer.validated_data
             token = AuthToken.objects.create(user)[1]
             user_res = request.data
-
             response.update({
                 'status': 'success',
                 'code': status.HTTP_200_OK,
@@ -124,12 +125,10 @@ class InvoiceAPIView(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 class SnippetDetail(APIView):
-    """
-    Retrieve, update or delete a snippet instance.
-    """
 
     def get_object(self, pk):
         try:
@@ -137,11 +136,6 @@ class SnippetDetail(APIView):
         except DBOTRequest.DoesNotExist:
             raise Http404
 
-    # def post(self, request):
-    #     serializer = InvoiceSerializer(data=request.data)
-    #     if serializer.is_valid():
-    #         serializer.save()
-    #         return Response(serializer.data, status=status.HTTP_201_CREATED)
     def get(self, request, pk, format=None):
         snippet = self.get_object(pk)
         serializer = InvoiceSerializer(snippet)
@@ -159,3 +153,22 @@ class SnippetDetail(APIView):
         snippet = self.get_object(pk)
         snippet.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+# class RegisterUserAPI(APIView):
+#     def post(self, request):
+#         serializer = Register(data=request.data)
+#         if serializer.is_valid():
+#             serializer.save()
+#         return Response(status=status.HTTP_200_OK)
+#login moi
+# class RegisterUserAPI(APIView):
+#     permission_classes_by_action = {'create': [AllowAny],
+#                                     'list': [IsAdminUser]}
+#
+#     def post(self, request):
+#         serializer = RegisterSerializer(data=request.data)
+#         if serializer.is_valid():
+#             serializer.save()
+#             return Response(serializer.data, status=status.HTTP_201_CREATED)
+#         return Response(serializer.data, status=status.HTTP_400_BAD_REQUEST)
